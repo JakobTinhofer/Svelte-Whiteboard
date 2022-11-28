@@ -1,8 +1,7 @@
 import svelte from 'rollup-plugin-svelte';
 import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
-import autoPreprocess from 'svelte-preprocess';
-import typescript from '@rollup/plugin-typescript';
+import sveltePreprocess from 'svelte-preprocess';
 
 const name = pkg.name
 	.replace(/^(@\S+\/)?(svelte-)?(\S+)/, '$3')
@@ -17,9 +16,8 @@ export default {
 	],
 	plugins: [
 		svelte({
-			preprocess: autoPreprocess()
+			preprocess: sveltePreprocess()
 		}),
-		typescript({ sourceMap: !production }),
 		resolve()
 	]
 };
