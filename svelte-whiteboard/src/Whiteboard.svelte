@@ -1,6 +1,6 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import type Path from "./Path.svelte";
+    import type Path from "./PathContainer.svelte";
     import { Point, WHITEBOARD_ELEM_KEY, p, rect2p } from "./types";
     import { onMount } from "svelte";
     import type WhiteboardElement from "./WhiteboardElement.svelte";
@@ -23,19 +23,18 @@
         registerElem(elem: WhiteboardElement){
             elems.push(elem);
         },
-        moveTo
+        moveTo,
+        removeElem(elem: WhiteboardElement){
+            const delInd = elems.indexOf(elem);
+            if(delInd > 0){
+                elems.splice(delInd, 1)
+            }
+        }
     });
     //#endregion
 
     //#region Auto-Resize
     function onWhiteboardResized(entries: ResizeObserverEntry[]): void{
-        var cRect = container.getBoundingClientRect()
-        let canvasses = [preview_canvas, main_canvas];
-        canvasses.forEach((canvas) => {
-            canvas.width = cRect.width;
-            canvas.height = cRect.height;
-        });
-
         render();
     }
     
@@ -48,12 +47,15 @@
     });
     //#endregion
     
-    var bg_offset = "0px 0px"
+    var svg_viewbox = "-10 -10 20 20";
+    var bg_offset = "0px 0px";
+    var bg_size = "10px 10px";
     export let CanvasFocus: Point = new Point(0,0);
-    $: if(CanvasFocus && container) {
+    $: if(CanvasFocus && container && CanvasZoom) {
         render();
     }
-    
+
+
     export let CanvasZoom: number = 1.0;
 
     export function getDimensions(): any{
@@ -64,7 +66,7 @@
     export function screenToBoard(point: Point): Point{
         if(container){
             var cRect = container.getBoundingClientRect();
-            return new Point((point.X - cRect.left - (cRect.width / 2) + CanvasFocus.X) / CanvasZoom, (point.Y - cRect.top - (cRect.height / 2) + CanvasFocus.Y) / CanvasZoom);
+            return new Point((point.X  - cRect.left - (cRect.width / 2) + CanvasFocus.X * CanvasZoom) / CanvasZoom, (point.Y  - cRect.top - (cRect.height / 2) + CanvasFocus.Y * CanvasZoom) / CanvasZoom);
         }
         else{
             throw "Cannot calculate point offset since container not yet available!";
@@ -74,7 +76,7 @@
     export function boardToCanvas(point: Point): Point{
         if(container){
             var cRect = container.getBoundingClientRect();
-            return new Point((point.X - CanvasFocus.X + (cRect.width / 2)) * CanvasZoom, (point.Y - CanvasFocus.Y + (cRect.height / 2)) * CanvasZoom);
+            return new Point((point.X * CanvasZoom - (CanvasFocus.X * CanvasZoom) + (cRect.width / 2)), (point.Y * CanvasZoom - (CanvasFocus.Y * CanvasZoom) + (cRect.height / 2)));
         }
         else{
             throw "Cannot calculate point offset since container not yet available!";
@@ -86,17 +88,16 @@
     export function render(){
         elems.forEach((elem) => {
             elem.moveTo(elem.Position);
-            var p = elem.GetPaths();
-            if(p){
-                
-            }
         })
 
         const sscRect = container.getBoundingClientRect();
-        const newPoint = new Point((-CanvasFocus.X + sscRect.width/2) % 10, (-CanvasFocus.Y + sscRect.height/2) % 10)
-        bg_offset = "" + newPoint.X * CanvasZoom  + "px " + newPoint.Y * CanvasZoom + "px";
-    
-        
+        const scaledDimensions = new Point(sscRect.width, sscRect.height).div(CanvasZoom);
+        const minPoint = CanvasFocus.add(scaledDimensions.mult(-0.5))
+        svg_viewbox = minPoint.X + " " + minPoint.Y + " " + scaledDimensions.X + " " + scaledDimensions.Y;
+        const newPoint = new Point((-(CanvasFocus.X * CanvasZoom ) + sscRect.width/2) % (10 * CanvasZoom), (-(CanvasFocus.Y * CanvasZoom) + sscRect.height/2) % (10 * CanvasZoom))
+        bg_offset = "" + newPoint.X  + "px " + newPoint.Y + "px";
+        bg_size = "" + 10 * CanvasZoom + "px " + 10 * CanvasZoom + "px";
+        document.documentElement.style.setProperty("--canvasZoom", "" + CanvasZoom);
     }
     //#endregion
 
@@ -111,11 +112,16 @@
 
 <style>
 
-canvas{
+svg{
     background-color: transparent;
     z-index: 1;
     pointer-events: none;
 }
+
+:root{
+    --canvasZoom: 1;
+}
+
 
 #container{
     position: relative;
@@ -124,7 +130,6 @@ canvas{
     background-image:
     linear-gradient(to right, rgb(230, 230, 230) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(230, 230, 230) 1px, transparent 1px);
-    background-size: 10px 10px;
 }
 
 #container > *{
@@ -132,16 +137,23 @@ canvas{
     width: 100%;
     height: 100%;
     overflow: hidden;
+    
+}
+#content_holder > :global(*){
+    transform: scale(var(--canvasZoom));
+    transform-origin: top left;
 }
 </style>
 <svelte:options accessors/>
 
 
-<div id="container" bind:this={container} style="background-position: {bg_offset};">
+<div id="container" bind:this={container} style="background-position: {bg_offset}; background-size: {bg_size};">
     <div bind:this={content_holder} id="content_holder">
         <slot>
         </slot>
     </div>
-    <canvas bind:this={preview_canvas} id="preview_canvas"></canvas>
-    <canvas bind:this={main_canvas} id="main_canvas"></canvas>
+    <svg viewBox="{svg_viewbox}">
+        <slot name="paths">
+        </slot>
+    </svg>
 </div>

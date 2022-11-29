@@ -26,7 +26,7 @@
         if(dragOffset){
             test.Position = whiteboard.screenToBoard(new Point(ev.clientX, ev.clientY)).add(dragOffset.neg());
         }else if(panOrigin){
-            whiteboard.CanvasFocus = whiteboard.CanvasFocus.add(new Point(ev.clientX, ev.clientY).add(panOrigin.neg()).neg());
+            whiteboard.CanvasFocus = whiteboard.CanvasFocus.add(new Point(ev.clientX, ev.clientY).add(panOrigin.neg()).div(-whiteboard.CanvasZoom));
             panOrigin = new Point(ev.clientX, ev.clientY);
         }
         mousePos =whiteboard.screenToBoard(new Point(ev.clientX, ev.clientY));
@@ -63,7 +63,7 @@
         z-index: 10;
     }
 </style>
-<svelte:window on:mousemove={doDrag} on:mouseup={endDrag} on:mousedown={startPan}></svelte:window>
+<svelte:window on:mousemove={doDrag} on:mouseup={endDrag} on:mousedown={startPan} on:wheel={windowScroll}></svelte:window>
 <div>
     <span>Canvas Focus: {whiteboard ? whiteboard.CanvasFocus : "undefined"}</span>
     <span>Pan Origin: {panOrigin ? panOrigin: "none"}</span>
@@ -76,6 +76,10 @@
             <p>Hi</p>
             <input bind:value={newPos} type="text" name="pos">
             <button on:click={moveElem}>Move!</button>
+            
         </div>
     </WhiteboardElement>
+    <svelte:fragment slot="paths">
+        <polygon fill=red stroke-width=0 points="0,10 20,10 10,0" />
+    </svelte:fragment>
 </Whiteboard>

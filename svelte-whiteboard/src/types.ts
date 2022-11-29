@@ -22,6 +22,14 @@ export class Point {
     public add(...points: Point[]) : Point{
         return AggregatePoints(this, ...points);
     }
+
+    public mult(fact: number): Point{
+        return new Point(this._x * fact, this._y * fact);
+    }
+
+    public div(div: number): Point{
+        return new Point(this._x / div, this._y / div);
+    }
 }
 
 export function p(str: string): Point{
