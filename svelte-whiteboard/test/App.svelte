@@ -26,7 +26,7 @@
         if(dragOffset){
             test.Position = whiteboard.screenToBoard(new Point(ev.clientX, ev.clientY)).add(dragOffset.neg());
         }else if(panOrigin){
-            whiteboard.CanvasFocus = whiteboard.CanvasFocus.add(new Point(ev.clientX, ev.clientY).add(panOrigin.neg()).div(-whiteboard.CanvasZoom));
+            whiteboard.BoardFocus = whiteboard.BoardFocus.add(new Point(ev.clientX, ev.clientY).add(panOrigin.neg()).div(-whiteboard.BoardZoom));
             panOrigin = new Point(ev.clientX, ev.clientY);
         }
         mousePos =whiteboard.screenToBoard(new Point(ev.clientX, ev.clientY));
@@ -46,12 +46,12 @@
     }
 
     function windowScroll(ev){
-        var scale = whiteboard.CanvasZoom;
+        var scale = whiteboard.BoardZoom;
         scale += ev.deltaY * -0.001;
 
         // Restrict scale
         scale = Math.min(Math.max(.125, scale), 4);
-        whiteboard.CanvasZoom = scale;
+        whiteboard.BoardZoom = scale;
     }
 </script>
 
@@ -65,10 +65,10 @@
 </style>
 <svelte:window on:mousemove={doDrag} on:mouseup={endDrag} on:mousedown={startPan} on:wheel={windowScroll}></svelte:window>
 <div>
-    <span>Canvas Focus: {whiteboard ? whiteboard.CanvasFocus : "undefined"}</span>
+    <span>Board Focus: {whiteboard ? whiteboard.BoardFocus : "undefined"}</span>
     <span>Pan Origin: {panOrigin ? panOrigin: "none"}</span>
     <span>Mouse Position (Board): {mousePos ? mousePos: "undefined"}</span>
-    <span>Scale: {whiteboard? whiteboard.CanvasZoom : "undefined"}</span>
+    <span>Scale: {whiteboard? whiteboard.BoardZoom : "undefined"}</span>
 </div>
 <Whiteboard bind:this={whiteboard}>
     <WhiteboardElement bind:this="{test}">
