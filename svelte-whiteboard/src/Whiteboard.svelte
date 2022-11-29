@@ -1,6 +1,7 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import { Point, WHITEBOARD_ELEM_KEY, p, rect2p } from "./types";
+    import {WHITEBOARD_ELEM_KEY} from "./constants";
+    import Point from "./Point";
     import { onMount } from "svelte";
     import type WhiteboardElement from "./WhiteboardElement.svelte";
 

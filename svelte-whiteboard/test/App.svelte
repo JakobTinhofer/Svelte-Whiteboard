@@ -1,14 +1,12 @@
 <script lang="ts">
-    import Whiteboard from "../src/index"
-    import WhiteboardElement from "../src/WhiteboardElement.svelte";
-    import {p, Point} from "../src/types"
+    import {Whiteboard, WhiteboardElement, Point} from "../src/index";
 
     let newPos;
     let whiteboard: Whiteboard;
     let test: WhiteboardElement;
     
     function moveElem(ev){
-        var po : Point = p(newPos)
+        var po : Point = Point.fromString(newPos)
         console.log(po);
         test.moveTo(po)
     }

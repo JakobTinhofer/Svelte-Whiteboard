@@ -1,7 +1,7 @@
 <script lang="ts">
-import { Point } from "./types";
-import { WHITEBOARD_ELEM_KEY, WHITEBOARD_PATHS_KEY } from "./types"
-import { getContext, setContext, onDestroy } from "svelte";
+import Point from "./Point";
+import { WHITEBOARD_ELEM_KEY } from "./constants"
+import { getContext, onDestroy } from "svelte";
 import { current_component } from "svelte/internal";
 
 onDestroy(() => {

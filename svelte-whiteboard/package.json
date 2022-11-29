@@ -1,6 +1,6 @@
 {
   "name": "svelte-whiteboard",
-  "svelte": "src/index.js",
+  "svelte": "src/index.ts",
   "module": "dist/index.mjs",
   "main": "dist/index.js",
   "scripts": {
@@ -16,7 +16,6 @@
     "rollup": "^2.0.0",
     "rollup-plugin-svelte": "^7.0.0",
     "svelte": "^3.5.0",
-    "svelte-check": "^2.9.2",
     "svelte-preprocess": "^4.10.7",
     "typescript": "^4.9.3",
     "vite": "^3.2.4"
