@@ -4,6 +4,7 @@ import pkg from './package.json';
 import css from "rollup-plugin-css-only"
 import sveltePreprocess from 'svelte-preprocess';
 import typescript from "@rollup/plugin-typescript";
+import terser from "@rollup/plugin-terser";
 
 const name = pkg.name
 	.replace(/^(@\S+\/)?(svelte-)?(\S+)/, '$3')
@@ -14,7 +15,8 @@ export default {
 	input: 'src/index.ts',
 	output: [
 		{ file: pkg.module, 'format': 'es' },
-		{ file: pkg.main, 'format': 'umd', name }
+		{ file: pkg.main, 'format': 'umd', name },
+		{ file: pkg.main.replace('.js','.min.js'), format: 'iife', name, plugins: [terser()]}
 	],
 	plugins: [
 		resolve({
