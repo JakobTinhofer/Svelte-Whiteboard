@@ -14,6 +14,7 @@
     let dragOffset: Point;
 
     function startDrag(ev){
+        console.log("Start drag");
         if(ev.which == 1){
             dragOffset = whiteboard.screenToBoard(new Point(ev.clientX, ev.clientY)).add(test.Position.neg());
         }
@@ -69,8 +70,8 @@
     <span>Scale: {whiteboard? whiteboard.BoardZoom : "undefined"}</span>
 </div>
 <Whiteboard bind:this={whiteboard}>
-    <WhiteboardElement bind:this="{test}">
-        <div on:mousedown={startDrag}>
+    <WhiteboardElement >
+        <div >
             <p>Hi</p>
             <input bind:value={newPos} type="text" name="pos">
             <button on:click={moveElem}>Move!</button>
@@ -78,6 +79,8 @@
         </div>
     </WhiteboardElement>
     <svelte:fragment slot="paths">
-        <polygon fill=red stroke-width=0 points="0,10 20,10 10,0" />
+        <WhiteboardElement bind:this="{test}">
+            <polygon on:mousedown={startDrag} fill=red stroke-width=0 points="0,10 20,10 10,0" />
+        </WhiteboardElement>
     </svelte:fragment>
 </Whiteboard>

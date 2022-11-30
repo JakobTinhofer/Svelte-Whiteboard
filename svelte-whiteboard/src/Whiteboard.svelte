@@ -1,9 +1,11 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import {WHITEBOARD_ELEM_KEY} from "./constants";
+    import {WHITEBOARD_ELEM_KEY, PathElement, HTMLElement} from "./constants";
     import Point from "./Point";
     import { onMount } from "svelte";
     import type WhiteboardElement from "./WhiteboardElement.svelte";
+    import Context from "./Context.svelte";
+    import { current_component } from "svelte/internal";
 
     
     
@@ -14,14 +16,14 @@
 
     //#endregion
 
-
+    const board = current_component;
     //#region Element Collection & Context
     let elems: Array<WhiteboardElement> = new Array<WhiteboardElement>();
     setContext(WHITEBOARD_ELEM_KEY, {
         registerElem(elem: WhiteboardElement){
             elems.push(elem);
         },
-        moveTo,
+        getBoard() { return board; },
         removeElem(elem: WhiteboardElement){
             const delInd = elems.indexOf(elem);
             if(delInd > 0){
@@ -94,7 +96,7 @@
      * @param point the point in board coordinates
      * @return A point where X is the left offset from the container and Y the top offset.
      */
-    export function boardToAbsolute(point: Point): Point{
+    export function boardToRelative(point: Point): Point{
         if(container){
             var cRect = container.getBoundingClientRect();
             return new Point((point.X * BoardZoom - (BoardFocus.X * BoardZoom) + (cRect.width / 2)), (point.Y * BoardZoom - (BoardFocus.Y * BoardZoom) + (cRect.height / 2)));
@@ -113,7 +115,8 @@
     export function render(){
         // Moves every element to its current position, in case it isn't
         elems.forEach((elem) => {
-            elem.moveTo(elem.Position);
+            console.log(elem);
+            elem.rerender();
         })
 
         const sscRect = container.getBoundingClientRect();
@@ -146,7 +149,7 @@
      * @return The new top and left offset for the element
      */
     function moveTo(p: Point): Point{
-        return boardToAbsolute(p);
+        return boardToRelative(p);
     }
     //#endregion
 
@@ -192,11 +195,15 @@ svg{
 
 <div id="container" bind:this={container} style="background-position: {bg_offset}; background-size: {bg_size};">
     <div bind:this={content_holder} id="content_holder">
-        <slot>
-        </slot>
+        <Context Key={WHITEBOARD_ELEM_KEY} Context={{type: HTMLElement}}>
+            <slot>
+            </slot>
+        </Context>
     </div>
-    <svg viewBox="{svg_viewbox}">
-        <slot name="paths">
-        </slot>
-    </svg>
+    <Context Key={WHITEBOARD_ELEM_KEY} Context={{type: PathElement}}>
+        <svg viewBox="{svg_viewbox}" xmlns="http://www.w3.org/2000/svg">    
+            <slot name="paths">
+            </slot>
+        </svg>
+    </Context>
 </div>
