@@ -1,12 +1,13 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import {WHITEBOARD_ELEM_KEY, PathElement, HTMLElement} from "./constants";
+    import {WHITEBOARD_ELEM_KEY, PathElement, HTMLElement } from "./constants";
     import Point from "./Point";
     import { onMount } from "svelte";
-    import type WhiteboardElement from "./WhiteboardElement.svelte";
+    import WhiteboardElement from "./WhiteboardElement.svelte";
     import Context from "./Context.svelte";
     import { current_component } from "svelte/internal";
 
+    
     
     
     //#region DOM-Binds
@@ -45,7 +46,7 @@
         onWhiteboardResized(null);
     });
     //#endregion
-    
+
 
     var svg_viewbox = "-10 -10 20 20";
     var bg_offset = "0px 0px";
@@ -196,13 +197,13 @@ svg{
 <div id="container" bind:this={container} style="background-position: {bg_offset}; background-size: {bg_size};">
     <div bind:this={content_holder} id="content_holder">
         <Context Key={WHITEBOARD_ELEM_KEY} Context={{type: HTMLElement}}>
-            <slot>
+            <slot {WhiteboardElement}>
             </slot>
         </Context>
     </div>
     <Context Key={WHITEBOARD_ELEM_KEY} Context={{type: PathElement}}>
         <svg viewBox="{svg_viewbox}" xmlns="http://www.w3.org/2000/svg">    
-            <slot name="paths">
+            <slot name="paths" {WhiteboardElement}>
             </slot>
         </svg>
     </Context>
