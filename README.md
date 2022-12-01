@@ -1,0 +1,1 @@
+A simple board where html elements and svg paths can be placed, moved, and interacted with in an absolute coordinate space 
