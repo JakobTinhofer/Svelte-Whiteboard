@@ -116,7 +116,6 @@
     export function render(){
         // Moves every element to its current position, in case it isn't
         elems.forEach((elem) => {
-            console.log(elem);
             elem.rerender();
         })
 
@@ -154,7 +153,67 @@
     }
     //#endregion
 
+    //#region Selection
 
+    let selectedElem : WhiteboardElement = null;
+    export function setSelectedElement(elem: WhiteboardElement ){
+        if(elem == null || elem.selectable){
+            if(selectedElem != null){
+                selectedElem.isSelected = false;
+            }
+            if(elem != null){
+                elem.isSelected = true;
+            }
+            selectedElem = elem;
+        }
+    }
+
+    //#endregion
+
+
+    //#region Board Behavior
+
+    export let canPan = true;
+    export let canZoom = true;
+
+    export let isPanning = false;
+
+    export let MousePosition: Point = new Point(0,0);
+
+    let panOrigin: Point = null;
+    function windowMouseDown(ev){
+        if(canPan && ev.which == 2){
+            isPanning = true;
+            panOrigin = new Point(ev.clientX, ev.clientY)
+        }
+    }
+
+    function windowMouseUp(ev){
+        isPanning = false;
+        panOrigin = null;
+    }
+
+    function windowMouseMove(ev){
+        if(isPanning){
+            BoardFocus = BoardFocus.add(new Point(ev.clientX, ev.clientY).add(panOrigin.neg()).div(-BoardZoom));
+            panOrigin = new Point(ev.clientX, ev.clientY);
+        }
+        MousePosition = screenToBoard(new Point(ev.clientX, ev.clientY));
+    }
+
+    function windowMouseScroll(ev){
+        if(canZoom){    
+            var scale = BoardZoom;
+            scale += ev.deltaY * -0.001;
+
+            // Restrict scale
+            scale = Math.min(Math.max(.125, scale), 4);
+            BoardZoom = scale;
+        }
+
+        
+    }
+    //#endregion
 </script>
 
 <style>
@@ -193,6 +252,7 @@ svg{
 </style>
 <svelte:options accessors/>
 
+<svelte:window on:mousedown={windowMouseDown} on:mousemove={windowMouseMove} on:wheel={windowMouseScroll} on:mouseup={windowMouseUp}/>
 
 <div id="container" bind:this={container} style="background-position: {bg_offset}; background-size: {bg_size};">
     <div bind:this={content_holder} id="content_holder">

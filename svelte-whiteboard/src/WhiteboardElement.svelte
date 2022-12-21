@@ -2,11 +2,8 @@
 import Point from "./Point";
 import { WHITEBOARD_ELEM_KEY } from "./constants"
 import { getContext, onDestroy, createEventDispatcher } from "svelte";
-import { current_component } from "svelte/internal";
 import type Whiteboard from "./Whiteboard.svelte";
 import type ElementType from "./ElementType";
-
-const dispatch = createEventDispatcher();
 
 onDestroy(() => {
     con.removeElem(this);
@@ -14,9 +11,8 @@ onDestroy(() => {
 
 export let Position: Point = new Point(0,0);
 
-let x;
-let y;
 
+const current_component = arguments[0]
 
 export let movable: boolean = true;
 export let selectable: boolean = true;
@@ -28,7 +24,6 @@ export let isSelected: boolean = false;
 
 export function rerender(){
     PosRel = board.boardToRelative(Position);
-    console.log("Updated relative position");
 }
 
 let container;
@@ -49,9 +44,37 @@ $: if(Position && board && container){
     rerender();    
 }
 
-function allowedEvents(node: Element){
-    
+
+//#region Element Behavior
+let waitingForMouseUp = false;
+let dragOffset : Point;
+function mouseUp(ev) {
+    isMoving = false;
+    dragOffset = null;
+    if(selectable && waitingForMouseUp){
+        // This is now selected
+        board.setSelectedElement(current_component);
+    }
 }
+
+function mouseDown(ev) {
+    if(movable && ev.which == 1){
+        isMoving = true;
+        dragOffset = board.screenToBoard(new Point(ev.clientX, ev.clientY)).add(Position.neg());
+    }
+    if(selectable && ev.which == 1){
+        waitingForMouseUp = true;
+        setTimeout(() => {waitingForMouseUp = false}, 200);
+    }
+}
+
+function mouseMoved(ev) {
+    if(isMoving){
+        Position = board.screenToBoard(new Point(ev.clientX, ev.clientY)).add(dragOffset.neg()); 
+    }
+}
+//#endregion
+
 
 </script>
 <svelte:options accessors/>
@@ -63,9 +86,11 @@ function allowedEvents(node: Element){
 
 </style>
 
+<svelte:window on:mouseup={mouseUp} on:mousemove={mouseMoved}/>
+
 {#if type.container == "g"}
-    <g id="container" use:allowedEvents transform="translate({Position.X}, {Position.Y})" bind:this={container} style="{type.style}"><slot></slot></g>
+    <g id="container" class:we-selected="{isSelected}" on:mousedown={mouseDown} transform="translate({Position.X}, {Position.Y})" bind:this={container} style="{type.style}"><slot></slot></g>
 {:else}
-    <div id="container" use:allowedEvents bind:this={container} style="{type.style} left: {PosRel.X}px; top: {PosRel.Y}px;"><slot></slot></div>
+    <div id="container" class:we-selected="{isSelected}" on:mousedown={mouseDown} bind:this={container} style="{type.style} left: {PosRel.X}px; top: {PosRel.Y}px;"><slot></slot></div>
 {/if}
 
