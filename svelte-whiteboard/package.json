@@ -1,5 +1,6 @@
 {
   "name": "svelte-whiteboard",
+  "version": "0.0.1",
   "svelte": "src/index.ts",
   "module": "dist/index.mjs",
   "main": "dist/index.js",
