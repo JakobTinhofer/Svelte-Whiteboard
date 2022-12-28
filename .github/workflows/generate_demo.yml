@@ -37,9 +37,12 @@ jobs:
       - run: |
           pwd
           ls -la
+        working-directory: ./svelte-whiteboard/
       - run: npm ci
+        working-directory: ./svelte-whiteboard/
       - run: npm run page --if-present
+        working-directory: ./svelte-whiteboard/
       - run: |
           pwd
           ls -la
-        
+        working-directory: ./svelte-whiteboard/
