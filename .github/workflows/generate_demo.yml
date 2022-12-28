@@ -1,0 +1,42 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to demo.lightbluefox.xyz
+
+on:
+  # Runs on pushes targeting the demo branch
+  push:
+    branches: ["github-demo"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x]
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout, then build with npm
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run page --if-present
+      - run: |
+          pwd
+          ls -la
+        
