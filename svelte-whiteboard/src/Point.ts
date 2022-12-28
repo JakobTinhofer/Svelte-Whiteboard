@@ -31,6 +31,14 @@ export default class Point{
         return new Point(this._x / div, this._y / div);
     }
 
+    public len(): number{
+        return Math.sqrt(Math.pow(this._x, 2) + Math.pow(this._y, 2))
+    }
+
+    public dist(p2: Point): number{
+        return Point.Distance(this, p2);
+    }
+
     public static fromString(str: string): Point{
         var strs = str.replace("(", "").replace(")", "").split("|");
         return new Point(Number(strs[0]), Number(strs[1]));
@@ -52,5 +60,9 @@ export default class Point{
             y += po.Y
         }
         return new Point(x,y);
+    }
+
+    public static Distance(p1: Point, p2: Point): number{
+        return (p1.add(p2.neg())).len()
     }
 }

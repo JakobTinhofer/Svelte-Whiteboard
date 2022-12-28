@@ -6,7 +6,7 @@
     import WhiteboardElement from "./WhiteboardElement.svelte";
     import Context from "./Context.svelte";
     import { current_component } from "svelte/internal";
-
+    import SmoothNumber from "./SmoothNumber"
     
     
     
@@ -29,6 +29,16 @@
             const delInd = elems.indexOf(elem);
             if(delInd > 0){
                 elems.splice(delInd, 1)
+            }
+        },
+        addEventListener(event: string, handler){
+            if(container){
+                container.addEventListener(event, handler);
+            }
+        },
+        removeEventListener(event: string, handler){
+            if(container){
+                container.removeEventListener(event, handler);
             }
         }
     });
@@ -66,6 +76,12 @@
      * Set this in order to change the zoom factor. All elements and paths will be scaled accordingly
      */
     export let BoardZoom: number = 1.0;
+
+    /**
+     * Use this to smooth out the changes in zoom.
+     */
+    export const BoardZoomSmooth = new SmoothNumber(BoardZoom, 1.5, false, (c: number) => {BoardZoom = c;})
+
 
     /**
      * Returns the dimensions of the container (in screen px)
@@ -181,39 +197,106 @@
     export let MousePosition: Point = new Point(0,0);
 
     let panOrigin: Point = null;
-    function windowMouseDown(ev){
+
+
+    const pointerCache = [];
+    let prevDelta = -1;
+    let prevCenterPoint: Point = null;
+    function containerPointerDown(ev){
         if(canPan && ev.which == 2){
             isPanning = true;
             panOrigin = new Point(ev.clientX, ev.clientY)
         }
+        if(ev.which == 1){
+            pointerCache.push(ev)
+        }
     }
 
-    function windowMouseUp(ev){
+    function containerPointerUp(ev){
+        console.log("POINTER UP: " + ev.type)
+        console.log(ev)
         isPanning = false;
         panOrigin = null;
+
+        // Remove this event from the target's cache
+        const index = pointerCache.findIndex((cachedEv) => cachedEv.pointerId === ev.pointerId);
+        pointerCache.splice(index, 1);
+
+        prevDelta = -1;
+        prevCenterPoint = null;
     }
 
-    function windowMouseMove(ev){
+    function containerPointerMove(ev){
         if(isPanning){
             BoardFocus = BoardFocus.add(new Point(ev.clientX, ev.clientY).add(panOrigin.neg()).div(-BoardZoom));
             panOrigin = new Point(ev.clientX, ev.clientY);
         }
+
+        // If two pointers are down, check for pinch gestures
+        if (pointerCache.length === 2) {
+            // Find this event in the cache and update its record with this event
+            const index = pointerCache.findIndex((cachedEv) => cachedEv.pointerId === ev.pointerId);
+            pointerCache[index] = ev;
+
+
+            // Calculate the distance between the two pointers
+            const p1 = new Point(pointerCache[0].clientX, pointerCache[0].clientY)
+            const p2 = new Point(pointerCache[1].clientX, pointerCache[1].clientY)
+
+            const currCenterPoint = p1.add(p2.add(p1.neg()).div(2))
+
+            const curDiff = p1.dist(p2);
+
+            let centerDist = null;
+
+            if(canPan && prevCenterPoint != null){
+                centerDist = prevCenterPoint.add(currCenterPoint.neg())
+                BoardFocus = BoardFocus.add(centerDist.div(BoardZoom));
+            }
+
+
+
+            const zoomMag = curDiff - prevDelta;
+
+            if (canZoom && prevDelta > 0 && (!(canPan && prevCenterPoint) || Math.abs(zoomMag) * 2 > centerDist.len())) {
+                
+                var scale = BoardZoom;
+                scale += zoomMag * 0.05;
+
+                // Restrict scale
+                scale = Math.min(Math.max(.125, scale), 4);
+                BoardZoomSmooth.set(scale);
+            }
+
+            
+            prevDelta = curDiff;
+            prevCenterPoint = currCenterPoint;
+        }
         MousePosition = screenToBoard(new Point(ev.clientX, ev.clientY));
     }
 
-    function windowMouseScroll(ev){
-        if(canZoom){    
+    function containerWheel(ev){
+        ev.preventDefault();
+
+
+        if(canZoom && ev.ctrlKey){    
             var scale = BoardZoom;
-            scale += ev.deltaY * -0.001;
+            scale += (ev.deltaY / Math.abs(ev.deltaY) ) * -0.1;
 
             // Restrict scale
             scale = Math.min(Math.max(.125, scale), 4);
-            BoardZoom = scale;
+            BoardZoomSmooth.set(scale);
         }
-
-        
+        if(canPan && !ev.ctrlKey && !isPanning){
+            BoardFocus = BoardFocus.add(new Point(ev.deltaX, ev.deltaY))
+        }
     }
+
+
     //#endregion
+
+
+    
 </script>
 
 <style>
@@ -231,6 +314,7 @@ svg{
 
 #container{
     position: relative;
+    touch-action: none;
     width: 100%;
     height: 100%;
     background-image:
@@ -252,9 +336,13 @@ svg{
 </style>
 <svelte:options accessors/>
 
-<svelte:window on:mousedown={windowMouseDown} on:mousemove={windowMouseMove} on:wheel={windowMouseScroll} on:mouseup={windowMouseUp}/>
-
-<div id="container" bind:this={container} style="background-position: {bg_offset}; background-size: {bg_size};">
+<div id="container" on:pointerdown={containerPointerDown}
+                    on:pointermove={containerPointerMove}
+                    on:wheel|nonpassive={containerWheel}
+                    on:pointerup={containerPointerUp}
+                    on:pointercancel={containerPointerUp}
+                    on:pointerleave={containerPointerUp}
+                    on:pointerout={containerPointerUp}  bind:this={container} style="background-position: {bg_offset}; background-size: {bg_size};">
     <div bind:this={content_holder} id="content_holder">
         <Context Key={WHITEBOARD_ELEM_KEY} Context={{type: HTMLElement}}>
             <slot {WhiteboardElement}>
