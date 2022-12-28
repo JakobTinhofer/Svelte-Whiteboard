@@ -34,6 +34,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+      - run: |
+          pwd
+          ls -la
       - run: npm ci
       - run: npm run page --if-present
       - run: |
