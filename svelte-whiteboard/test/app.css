@@ -50,3 +50,9 @@ body, html, #app{
     background-color: #f9f9f9;
   }
 }
+
+
+.we-selected *{
+  background-color: #535bf2 !important;
+  fill: #535bf2 !important;
+}
