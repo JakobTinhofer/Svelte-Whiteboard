@@ -24,7 +24,7 @@
 <Whiteboard bind:this={whiteboard} bind:MousePosition={pos}>
     <WhiteboardElement >
         <div >
-            <p>Hi how are you on this nice summer day</p>
+            <p>This is a simple div</p>
         </div>
     </WhiteboardElement>
     <svelte:fragment slot="paths">

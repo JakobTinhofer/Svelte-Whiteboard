@@ -5,6 +5,9 @@ import { getContext, onDestroy, onMount } from "svelte";
 import type Whiteboard from "./Whiteboard.svelte";
 import type ElementType from "./ElementType";
 import { prevent_default } from "svelte/internal";
+import { createEventDispatcher } from 'svelte';
+
+const dispatch = createEventDispatcher();
 
 onDestroy(() => {
     con.removeEventListener("pointermove", pointerMoved)
@@ -37,6 +40,9 @@ export let isMoving: boolean = false;
 // Is currently selected
 export let isSelected: boolean = false;
 
+$: if(isSelected){
+    dispatch("selected", {Elem: current_component})
+}
 
 /**
  * This feels like a not-good hack, optimization needed!
@@ -152,8 +158,8 @@ function pointerMoved(ev) {
 
 
 {#if type.container == "g"}
-    <g id="container" class:we-selected="{isSelected}" on:pointerdown={pointerDown} transform="translate({Position.X}, {Position.Y})" bind:this={container} style="{type.style}"><slot></slot></g>
+    <g id="container" class:we-selected="{isSelected}" class:we-moving="{isMoving}" on:pointerdown={pointerDown} transform="translate({Position.X}, {Position.Y})" bind:this={container} style="{type.style}"><slot></slot></g>
 {:else}
-    <div id="container" class:we-selected="{isSelected}" on:pointerdown={pointerDown} bind:this={container} style="{type.style} left: {PosRel.X}px; top: {PosRel.Y}px;"><slot></slot></div>
+    <div id="container"  class:we-selected="{isSelected}" class:we-moving="{isMoving}" on:pointerdown={pointerDown} bind:this={container} style="{type.style} left: {PosRel.X}px; top: {PosRel.Y}px;"><slot></slot></div>
 {/if}
 
